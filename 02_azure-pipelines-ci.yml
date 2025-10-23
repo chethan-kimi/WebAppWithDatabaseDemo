@@ -14,12 +14,13 @@ jobs:
     system.debug: true
   
   steps:
+    
   - task: JavaToolInstaller@1
     displayName: 'Install/Use Java 17'
     inputs:
-       versionSpec: '17'
-       jdkArchitectureOption: 'x64'
-    
+      versionSpec: '17'
+      jdkArchitectureOption: 'x64'
+      jdkSourceOption: 'PreInstalled'
 
   - task: PowerShell@2
     displayName: 'Show java version'
