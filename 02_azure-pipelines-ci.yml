@@ -49,7 +49,7 @@ jobs:
     inputs:
       SonarCloud: 'SonarCloud'
       organization: 'chethan-kimi'
-      scannerMode: 'MSBuild'
+      scannerMode: 'dotnet'
       projectKey: 'WebAppWithDatabaseDemo'
 
 
