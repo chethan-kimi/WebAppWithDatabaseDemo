@@ -74,7 +74,15 @@ jobs:
   #     organization: chethan-kimi
   #     projectKey: 'WebAppWithDatabaseDemo'
       
-        
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        - powershell: |
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$(Build.SourcesDirectory)\.sonarqube\out\*"
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$(Agent.TempDirectory)\*sonar*"
+          displayName: 'Clean Sonar temp files'
+          
   - task: SonarCloudPrepare@3
     displayName: 'Prepare analysis on SonarCloud'
     inputs:
