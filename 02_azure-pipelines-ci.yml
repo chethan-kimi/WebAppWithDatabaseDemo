@@ -47,7 +47,7 @@ jobs:
   - task: SonarCloudPrepare@3
     displayName: 'Prepare analysis on SonarCloud'
     inputs:
-      SonarCloud: 'SonarCloud'
+      SonarQube: 'test-sonar'
       organization: 'chethan-kimi'
       scannerMode: 'dotnet'
       projectKey: 'WebAppWithDatabaseDemo'
