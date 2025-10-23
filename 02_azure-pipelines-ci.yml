@@ -11,32 +11,9 @@ jobs:
     vmImage: 'windows-2019'
   variables:
     BuildConfiguration: release
-    system.debug: true
   
   steps:
-    
-  - task: JavaToolInstaller@1
-    displayName: 'Install/Use Java 17'
-    inputs:
-      versionSpec: '17'
-      jdkArchitectureOption: 'x64'
-      jdkSourceOption: 'PreInstalled'
-
-  - task: PowerShell@2
-    displayName: 'Show java version'
-    inputs:
-      targetType: 'inline'
-      script: |
-              java -version
-              where.exe java
-              Write-Host "JAVA_HOME: $env:JAVA_HOME"
-  - task: PowerShell@2
-    displayName: 'Set SONAR_SCANNER_OPTS'
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "##vso[task.setvariable variable=SONAR_SCANNER_OPTS]-Xmx1024m -Dsonar.verbose=true -Dsun.zip.disableMemoryMapping=true"
-
+  
   - task: UseDotNet@2
     displayName: Install .NET 6 sdk
     inputs:
@@ -44,53 +21,38 @@ jobs:
       version: 6.0.x
       installationPath: $(Agent.ToolsDirectory)/dotnet
 
-  # - task: DotNetCoreCLI@2
-  #   displayName: Restore
-  #   inputs:
-  #     command: restore
-  #     projects: '**/WebApp.csproj'
-  
-  # - powershell: |
-  #    $paths = Get-ChildItem -include *.csproj -Recurse
-  #    foreach($pathobject in $paths) 
-  #    {
-  #        $path = $pathobject.fullname
-  #        $doc = New-Object System.Xml.XmlDocument
-  #        $doc.Load($path)
-  #        $child = $doc.CreateElement("ProjectGuid")
-  #        $child.InnerText = [guid]::NewGuid().ToString().ToUpper()
-  #        $node = $doc.SelectSingleNode("//Project/PropertyGroup")
-  #        $node.AppendChild($child)
-  #        $doc.Save($path)
-  #    }
-  #   workingDirectory: WebApp
-  #   displayName: 'PS : Add Project GUID'
-  #   enabled: false
-  
-  # - task: SonarCloudPrepare@1
-  #   displayName: 'Prepare analysis on SonarCloud'
-  #   inputs:
-  #     SonarCloud: SonarCloud
-  #     organization: chethan-kimi
-  #     projectKey: 'WebAppWithDatabaseDemo'
-      
-  - task: PowerShell@2
+  - task: DotNetCoreCLI@2
+    displayName: Restore
     inputs:
-      targetType: 'inline'
-      script: |
-        - powershell: |
-            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$(Build.SourcesDirectory)\.sonarqube\out\*"
-            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$(Agent.TempDirectory)\*sonar*"
-          displayName: 'Clean Sonar temp files'
-          
+      command: restore
+      projects: '**/WebApp.csproj'
+  
+  - powershell: |
+     $paths = Get-ChildItem -include *.csproj -Recurse
+     foreach($pathobject in $paths) 
+     {
+         $path = $pathobject.fullname
+         $doc = New-Object System.Xml.XmlDocument
+         $doc.Load($path)
+         $child = $doc.CreateElement("ProjectGuid")
+         $child.InnerText = [guid]::NewGuid().ToString().ToUpper()
+         $node = $doc.SelectSingleNode("//Project/PropertyGroup")
+         $node.AppendChild($child)
+         $doc.Save($path)
+     }
+    workingDirectory: WebApp
+    displayName: 'PS : Add Project GUID'
+    enabled: false
+  
   - task: SonarCloudPrepare@3
     displayName: 'Prepare analysis on SonarCloud'
     inputs:
-      SonarQube: 'SonarCloud'
+      SonarCloud: 'SonarCloud'
       organization: 'chethan-kimi'
-      scannerMode: 'dotnet'
+      scannerMode: 'MSBuild'
       projectKey: 'WebAppWithDatabaseDemo'
-  
+
+
   - task: DotNetCoreCLI@2
     displayName: Build
     inputs:
@@ -111,97 +73,67 @@ jobs:
       publishWebProjects: True
       arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
       zipAfterPublish: True
-
-  - task: PowerShell@2
-    displayName: 'Print Java info & enable Sonar verbose'
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "=== java -version ==="
-        java -version
-        Write-Host "where java:"
-        where.exe java
-        Write-Host "JAVA_HOME:"
-        Write-Host $env:JAVA_HOME
-
-        Write-Host "Setting SONAR_SCANNER_OPTS for subsequent tasks"
-        # Expose SONAR_SCANNER_OPTS as a pipeline variable for following tasks
-        Write-Host "##vso[task.setvariable variable=SONAR_SCANNER_OPTS]-Xmx1024m -Dsonar.verbose=true -Dsun.zip.disableMemoryMapping=true"
-        Write-Host "SONAR_SCANNER_OPTS set to: $env:SONAR_SCANNER_OPTS"
-
+  
   - task: SonarCloudAnalyze@3
-    inputs:
-      jdkversion: 'JAVA_HOME_17_X64'
     displayName: 'Run Code Analysis'
-
-  # - task: SonarCloudAnalyze@1
-  #   inputs:
-  #     jdkversion: 'JAVA_HOME_21_X64'
-  #   displayName: 'Run Code Analysis'
   
   - task: SonarCloudPublish@3
     displayName: 'Publish Quality Gate Result'
-    # inputs:
-    #   pollingTimeoutSec: '300'
-  # - task: SonarCloudPublish@1
-  #   displayName: 'Publish Quality Gate Result'
   
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact (WebApp.zip)'
     inputs:
       PathtoPublish: '$(build.artifactstagingdirectory)'
 
-# - job: Database
-#   displayName: 'Build Database'
-#   pool:
-#     vmImage: 'windows-2019'
+- job: Database
+  displayName: 'Build Database'
+  pool:
+    vmImage: 'windows-2019'
 
-#   steps:
-#   - task: MSBuild@1
-#     displayName: 'Build solution WebApp.Database.sqlproj'
-#     inputs:
-#       solution: WebApp.Database/WebApp.Database.sqlproj
-#       msbuildArguments: '/p:OutDir=$(Build.ArtifactStagingDirectory)'
+  steps:
+  - task: MSBuild@1
+    displayName: 'Build solution WebApp.Database.sqlproj'
+    inputs:
+      solution: WebApp.Database/WebApp.Database.sqlproj
+      msbuildArguments: '/p:OutDir=$(Build.ArtifactStagingDirectory)'
   
-#   - task: PublishBuildArtifacts@1
-#     displayName: 'Publish Artifact (Dacpac)'
-#     inputs:
-#       ArtifactName: dacpac
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact (Dacpac)'
+    inputs:
+      ArtifactName: dacpac
 
-# - job: Selenium
-#   displayName: 'Build UI Tests'
-#   pool:
-#     vmImage: 'windows-2019'
+- job: Selenium
+  displayName: 'Build UI Tests'
+  pool:
+    vmImage: 'windows-2019'
 
-#   steps:
-#   - task: NuGetToolInstaller@0
-#     displayName: 'Use NuGet 4.3.0'
+  steps:
+  - task: NuGetToolInstaller@0
+    displayName: 'Use NuGet 4.3.0'
 
-#   - task: NuGetCommand@2
-#     displayName: 'NuGet restore'
-#     inputs:
-#       restoreSolution: WebAppWithDatabase.sln
+  - task: NuGetCommand@2
+    displayName: 'NuGet restore'
+    inputs:
+      restoreSolution: WebAppWithDatabase.sln
 
-#   - task: MSBuild@1
-#     displayName: 'Build project SeleniumUiTests.csproj'
-#     inputs:
-#       solution: SeleniumUiTests/SeleniumUiTests.csproj
-#       msbuildArguments: '/p:OutDir=$(Build.ArtifactStagingDirectory)'
+  - task: MSBuild@1
+    displayName: 'Build project SeleniumUiTests.csproj'
+    inputs:
+      solution: SeleniumUiTests/SeleniumUiTests.csproj
+      msbuildArguments: '/p:OutDir=$(Build.ArtifactStagingDirectory)'
 
-#   - task: PublishBuildArtifacts@1
-#     displayName: 'Publish Artifact: UI-Test'
-#     inputs:
-#       ArtifactName: 'UI-Test'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: UI-Test'
+    inputs:
+      ArtifactName: 'UI-Test'
 
-# - job: Infrastructure
-#   displayName: 'Copy Infrastructure files (ARM)'
-#   pool:
-#     vmImage: 'ubuntu-latest'
-#   steps:
-#   - task: PublishBuildArtifacts@1
-#     displayName: 'Publish Artifact: ARM templates'
-#     inputs:
-#       PathtoPublish: AzureResourceGroupDeployment
-#       ArtifactName: arm
-
-
+- job: Infrastructure
+  displayName: 'Copy Infrastructure files (ARM)'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: ARM templates'
+    inputs:
+      PathtoPublish: AzureResourceGroupDeployment
+      ArtifactName: arm
