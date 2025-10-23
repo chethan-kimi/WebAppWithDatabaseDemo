@@ -61,26 +61,26 @@ jobs:
       scannerMode: 'dotnet'
       projectKey: 'WebAppWithDatabaseDemo'
   
-  # - task: DotNetCoreCLI@2
-  #   displayName: Build
-  #   inputs:
-  #     projects: '**/WebApp.csproj'
-  #     arguments: '--configuration $(BuildConfiguration)'
+  - task: DotNetCoreCLI@2
+    displayName: Build
+    inputs:
+      projects: '**/WebApp.csproj'
+      arguments: '--configuration $(BuildConfiguration)'
   
-  # - task: DotNetCoreCLI@2
-  #   displayName: Test
-  #   inputs:
-  #     command: test
-  #     projects: '**/*UnitTest*.csproj'
-  #     arguments: '--configuration $(BuildConfiguration)'
+  - task: DotNetCoreCLI@2
+    displayName: Test
+    inputs:
+      command: test
+      projects: '**/*UnitTest*.csproj'
+      arguments: '--configuration $(BuildConfiguration)'
   
-  # - task: DotNetCoreCLI@2
-  #   displayName: Publish
-  #   inputs:
-  #     command: publish
-  #     publishWebProjects: True
-  #     arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
-  #     zipAfterPublish: True
+  - task: DotNetCoreCLI@2
+    displayName: Publish
+    inputs:
+      command: publish
+      publishWebProjects: True
+      arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+      zipAfterPublish: True
 
   - task: PowerShell@2
     displayName: 'Print Java info & enable Sonar verbose'
