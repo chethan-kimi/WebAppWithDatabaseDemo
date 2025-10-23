@@ -61,26 +61,44 @@ jobs:
       scannerMode: 'dotnet'
       projectKey: 'WebAppWithDatabaseDemo'
   
-  - task: DotNetCoreCLI@2
-    displayName: Build
-    inputs:
-      projects: '**/WebApp.csproj'
-      arguments: '--configuration $(BuildConfiguration)'
+  # - task: DotNetCoreCLI@2
+  #   displayName: Build
+  #   inputs:
+  #     projects: '**/WebApp.csproj'
+  #     arguments: '--configuration $(BuildConfiguration)'
   
-  - task: DotNetCoreCLI@2
-    displayName: Test
-    inputs:
-      command: test
-      projects: '**/*UnitTest*.csproj'
-      arguments: '--configuration $(BuildConfiguration)'
+  # - task: DotNetCoreCLI@2
+  #   displayName: Test
+  #   inputs:
+  #     command: test
+  #     projects: '**/*UnitTest*.csproj'
+  #     arguments: '--configuration $(BuildConfiguration)'
   
-  - task: DotNetCoreCLI@2
-    displayName: Publish
+  # - task: DotNetCoreCLI@2
+  #   displayName: Publish
+  #   inputs:
+  #     command: publish
+  #     publishWebProjects: True
+  #     arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+  #     zipAfterPublish: True
+
+  - task: PowerShell@2
     inputs:
-      command: publish
-      publishWebProjects: True
-      arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
-      zipAfterPublish: True
+      targetType: 'inline'
+      script: |
+        - powershell: |
+            Write-Host "=== java -version ==="
+            java -version
+            Write-Host "where java:"
+            where.exe java
+            Write-Host "JAVA_HOME:"
+            echo %JAVA_HOME%
+            Write-Host "Setting SONAR_SCANNER_OPTS for verbose output"
+            # set for current session (affects subsequent tasks in same job)
+            $env:SONAR_SCANNER_OPTS = "-Xmx1024m -Dsonar.verbose=true -Dsun.zip.disableMemoryMapping=true"
+            Write-Host "SONAR_SCANNER_OPTS: $env:SONAR_SCANNER_OPTS"
+          displayName: 'Print Java info & enable Sonar verbose'
+          shell: powershell
 
   - task: SonarCloudAnalyze@3
     inputs:
