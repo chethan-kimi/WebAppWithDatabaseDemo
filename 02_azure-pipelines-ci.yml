@@ -73,6 +73,8 @@ jobs:
       zipAfterPublish: True
   
   - task: SonarCloudAnalyze@1
+    inputs:
+      jdkversion: 'JAVA_HOME'
     displayName: 'Run Code Analysis'
   
   - task: SonarCloudPublish@1
