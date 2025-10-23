@@ -74,7 +74,7 @@ jobs:
   
   - task: SonarCloudAnalyze@1
     inputs:
-      jdkversion: 'JAVA_HOME'
+      jdkversion: 'JAVA_HOME_21_X64'
     displayName: 'Run Code Analysis'
   
   - task: SonarCloudPublish@1
