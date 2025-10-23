@@ -44,12 +44,20 @@ jobs:
     displayName: 'PS : Add Project GUID'
     enabled: false
   
-  - task: SonarCloudPrepare@1
+  # - task: SonarCloudPrepare@1
+  #   displayName: 'Prepare analysis on SonarCloud'
+  #   inputs:
+  #     SonarCloud: SonarCloud
+  #     organization: chethan-kimi
+  #     projectKey: 'WebAppWithDatabaseDemo'
+      
+  - task: SonarCloudPrepare@3
     displayName: 'Prepare analysis on SonarCloud'
     inputs:
-      SonarCloud: SonarCloud
-      organization: chethan-kimi
-      projectKey: WebAppWithDatabaseDemo
+      SonarQube: 'SonarCloud'
+      organization: 'chethan-kimi'
+      scannerMode: 'dotnet'
+      projectKey: 'WebAppWithDatabaseDemo'
   
   - task: DotNetCoreCLI@2
     displayName: Build
@@ -71,14 +79,23 @@ jobs:
       publishWebProjects: True
       arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
       zipAfterPublish: True
-  
-  - task: SonarCloudAnalyze@1
+
+  - task: SonarCloudAnalyze@3
     inputs:
-      jdkversion: 'JAVA_HOME_21_X64'
+      jdkversion: 'JAVA_HOME_17_X64'
     displayName: 'Run Code Analysis'
+
+  # - task: SonarCloudAnalyze@1
+  #   inputs:
+  #     jdkversion: 'JAVA_HOME_21_X64'
+  #   displayName: 'Run Code Analysis'
   
-  - task: SonarCloudPublish@1
+  - task: SonarCloudPublish@3
     displayName: 'Publish Quality Gate Result'
+    # inputs:
+    #   pollingTimeoutSec: '300'
+  # - task: SonarCloudPublish@1
+  #   displayName: 'Publish Quality Gate Result'
   
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact (WebApp.zip)'
