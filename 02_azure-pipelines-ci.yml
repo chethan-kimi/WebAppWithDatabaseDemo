@@ -51,6 +51,16 @@ jobs:
   #     SonarCloud: SonarCloud
   #     organization: chethan-kimi
   #     projectKey: 'WebAppWithDatabaseDemo'
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "##[group]Debug on & Java info"
+        $env:SONAR_SCANNER_OPTS = "-Xmx1024m -Dsonar.verbose=true -Dsun.zip.disableMemoryMapping=true"
+        echo "SONAR_SCANNER_OPTS=$env:SONAR_SCANNER_OPTS"
+        java -version
+        Write-Host "##[endgroup]"
       
   - task: SonarCloudPrepare@3
     displayName: 'Prepare analysis on SonarCloud'
