@@ -83,22 +83,21 @@ jobs:
   #     zipAfterPublish: True
 
   - task: PowerShell@2
+    displayName: 'Print Java info & enable Sonar verbose'
     inputs:
       targetType: 'inline'
       script: |
-        - powershell: |
-            Write-Host "=== java -version ==="
-            java -version
-            Write-Host "where java:"
-            where.exe java
-            Write-Host "JAVA_HOME:"
-            echo %JAVA_HOME%
-            Write-Host "Setting SONAR_SCANNER_OPTS for verbose output"
-            # set for current session (affects subsequent tasks in same job)
-            $env:SONAR_SCANNER_OPTS = "-Xmx1024m -Dsonar.verbose=true -Dsun.zip.disableMemoryMapping=true"
-            Write-Host "SONAR_SCANNER_OPTS: $env:SONAR_SCANNER_OPTS"
-          displayName: 'Print Java info & enable Sonar verbose'
-          shell: powershell
+        Write-Host "=== java -version ==="
+        java -version
+        Write-Host "where java:"
+        where.exe java
+        Write-Host "JAVA_HOME:"
+        Write-Host $env:JAVA_HOME
+
+        Write-Host "Setting SONAR_SCANNER_OPTS for subsequent tasks"
+        # Expose SONAR_SCANNER_OPTS as a pipeline variable for following tasks
+        Write-Host "##vso[task.setvariable variable=SONAR_SCANNER_OPTS]-Xmx1024m -Dsonar.verbose=true -Dsun.zip.disableMemoryMapping=true"
+        Write-Host "SONAR_SCANNER_OPTS set to: $env:SONAR_SCANNER_OPTS"
 
   - task: SonarCloudAnalyze@3
     inputs:
