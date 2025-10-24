@@ -1,0 +1,22 @@
+trigger: none
+# - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  acr_name: acr4aks13579
+  tag: 1.0.0-$(Build.BuildId)
+
+steps:
+
+- task: AzureCLI@2
+  displayName: Docker Build & Push
+  inputs:
+    azureSubscription: 'azure-connection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      docker build -t $(acr_name).azurecr.io/webapp:$(tag) app-dotnet
+      az acr login -n $(acr_name)
+      docker push $(acr_name).azurecr.io/webapp:$(tag)
